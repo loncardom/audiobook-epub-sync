@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audiobook-epub-sync"
+version = "0.1.0"
+description = "CLI for aligning EPUB text with audiobook audio and emitting frontend sync timelines"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "OpenAI Codex + Claude scaffold" }]
+dependencies = [
+  "ebooklib>=0.18",
+  "beautifulsoup4>=4.12",
+  "lxml>=5.0",
+]
+
+[project.scripts]
+audiobook-epub-sync = "audiobook_epub_sync.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
