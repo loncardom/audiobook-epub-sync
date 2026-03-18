@@ -26,6 +26,8 @@ class SpokenWord:
     start: float
     end: float
     chunk_index: int | None = None
+    segment_start: float | None = None
+    segment_end: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -39,6 +41,7 @@ class TimelineEntry:
     spoken: str | None
     spine: int | None
     cfi: str
+    repaired: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

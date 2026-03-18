@@ -3,7 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from .models import EpubWord
-from .text import ROMAN_MARKER_RE, WORD_RE, int_to_words, normalize_word, roman_to_int
+from .text import (
+    ROMAN_MARKER_RE,
+    WORD_RE,
+    int_to_words,
+    normalize_alignment_tokens,
+    normalize_word,
+    roman_to_int,
+)
 
 
 def _css_path(element) -> str:
@@ -43,8 +50,7 @@ def _align_tokens(kind: str, word: str) -> list[str]:
         if numeric is not None:
             return [normalize_word(token) for token in int_to_words(numeric).split() if token]
 
-    normalized = normalize_word(word)
-    return [normalized] if normalized else []
+    return normalize_alignment_tokens(word)
 
 
 def extract_epub_words(epub_path: Path) -> list[EpubWord]:

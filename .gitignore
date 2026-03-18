@@ -9,3 +9,6 @@ dist/
 *.egg-info/
 work/
 out/
+samples/
+
+book_timeline.json

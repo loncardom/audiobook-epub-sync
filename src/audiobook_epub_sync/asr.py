@@ -35,6 +35,8 @@ def _approximate_words_from_segment(
                 start=word_start,
                 end=word_end,
                 chunk_index=chunk_index,
+                segment_start=start,
+                segment_end=end,
             )
         )
     return out
@@ -62,6 +64,8 @@ def _parse_whisper_json(
                         start=float(item["start"]) + chunk_offset,
                         end=float(item["end"]) + chunk_offset,
                         chunk_index=chunk_index,
+                        segment_start=float(segment.get("start", 0.0)) + chunk_offset,
+                        segment_end=float(segment.get("end", 0.0)) + chunk_offset,
                     )
                 )
                 next_index += 1

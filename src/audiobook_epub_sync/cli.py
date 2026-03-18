@@ -72,6 +72,10 @@ def build_command(args: argparse.Namespace) -> int:
         report_stats["accepted_chunk_count"] = alignment_stats["accepted_chunk_count"]
         report_stats["chunk_count"] = alignment_stats["chunk_count"]
         report_stats["chunk_reports"] = alignment_stats["chunk_reports"]
+        report_stats["repaired_word_count"] = alignment_stats["repaired_word_count"]
+        report_stats["repaired_gap_count"] = alignment_stats["repaired_gap_count"]
+        report_stats["unrepaired_short_gap_count"] = alignment_stats["unrepaired_short_gap_count"]
+        report_stats["repair_examples"] = alignment_stats["repair_examples"]
     except Exception as exc:
         report_status = "partial"
         report_message = (
@@ -81,6 +85,10 @@ def build_command(args: argparse.Namespace) -> int:
         report_stats["spoken_word_count"] = 0
         report_stats["timeline_entry_count"] = 0
         report_stats["alignment_match_ratio"] = 0.0
+        report_stats["repaired_word_count"] = 0
+        report_stats["repaired_gap_count"] = 0
+        report_stats["unrepaired_short_gap_count"] = 0
+        report_stats["repair_examples"] = []
 
     report = BuildReport(
         status=report_status,

@@ -23,6 +23,19 @@ def normalize_word(word: str) -> str:
     return normalized
 
 
+def normalize_alignment_tokens(word: str) -> list[str]:
+    normalized = normalize_word(word)
+    if not normalized:
+        return []
+
+    if normalized.isdigit():
+        numeric = int(normalized)
+        if 0 <= numeric <= 100:
+            return [normalize_word(token) for token in int_to_words(numeric).split() if token]
+
+    return [normalized]
+
+
 def roman_to_int(value: str) -> int | None:
     if not value:
         return None

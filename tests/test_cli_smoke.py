@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
 
+from audiobook_epub_sync import cli
 from audiobook_epub_sync.cli import build_parser
 from audiobook_epub_sync.epub import extract_epub_words
+from audiobook_epub_sync.models import EpubWord, SpokenWord, TimelineEntry
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -36,7 +38,56 @@ def test_extract_epub_words_returns_locator_rows() -> None:
     assert "w=" in first_word.cfi
 
 
-def test_build_command_writes_epub_words_artifact(tmp_path: Path) -> None:
+def test_build_command_writes_epub_words_artifact(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(
+        cli,
+        "extract_epub_words",
+        lambda _path: [
+            EpubWord(
+                index=0,
+                word="Hello",
+                spine=0,
+                href="chapter.xhtml",
+                path="html > body > p",
+                cfi="spine=0;href=chapter.xhtml;path=html > body > p;w=0",
+                align_tokens=["hello"],
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        cli,
+        "extract_spoken_words",
+        lambda _config: [
+            SpokenWord(index=0, word="Hello", start=0.0, end=0.2, chunk_index=0)
+        ],
+    )
+    monkeypatch.setattr(
+        cli,
+        "align_spoken_words_with_stats",
+        lambda _epub_words, _spoken_words: (
+            [
+                TimelineEntry(
+                    start=0.0,
+                    end=0.2,
+                    word="Hello",
+                    spoken="Hello",
+                    spine=0,
+                    cfi="spine=0;href=chapter.xhtml;path=html > body > p;w=0",
+                )
+            ],
+            {
+                "match_ratio": 1.0,
+                "accepted_chunk_count": 1,
+                "chunk_count": 1,
+                "chunk_reports": [],
+                "repaired_word_count": 0,
+                "repaired_gap_count": 0,
+                "unrepaired_short_gap_count": 0,
+                "repair_examples": [],
+            },
+        ),
+    )
+
     parser = build_parser()
     args = parser.parse_args([
         "build",
@@ -64,4 +115,5 @@ def test_build_command_writes_epub_words_artifact(tmp_path: Path) -> None:
 
     assert isinstance(epub_words, list)
     assert epub_words
-    assert report["status"] == "partial"
+    assert report["status"] == "success"
+    assert report["stats"]["timeline_entry_count"] == 1
