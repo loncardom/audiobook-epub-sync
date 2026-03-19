@@ -23,6 +23,36 @@ def build_report_output_path(config: BuildConfig) -> Path:
     return config.work_dir / "build_report.json"
 
 
+def build_coverage_stats(epub_words_count: int, timeline_entries: list) -> dict[str, float | int]:
+    matched_locators = {entry.cfi for entry in timeline_entries if entry.cfi}
+    matched_epub_word_count = len(matched_locators)
+    epub_coverage_ratio = (
+        matched_epub_word_count / epub_words_count if epub_words_count > 0 else 0.0
+    )
+    return {
+        "matched_epub_word_count": matched_epub_word_count,
+        "epub_coverage_ratio": epub_coverage_ratio,
+    }
+
+
+def build_mismatch_warning(
+    epub_words_count: int,
+    spoken_word_count: int,
+    matched_epub_word_count: int,
+    epub_coverage_ratio: float,
+) -> str | None:
+    if epub_words_count == 0:
+        return None
+    spoken_to_epub_ratio = spoken_word_count / epub_words_count
+    if epub_coverage_ratio >= 0.75 and spoken_to_epub_ratio >= 0.6:
+        return None
+    return (
+        "Warning: low EPUB coverage suggests this audiobook may not match the full EPUB text. "
+        f"Matched {matched_epub_word_count} of {epub_words_count} EPUB words "
+        f"({epub_coverage_ratio:.1%} coverage) from {spoken_word_count} spoken words."
+    )
+
+
 def build_command(args: argparse.Namespace) -> int:
     config = BuildConfig(
         epub_path=Path(args.epub).expanduser().resolve(),
@@ -68,6 +98,7 @@ def build_command(args: argparse.Namespace) -> int:
         report_artifacts["timeline"] = str(artifacts.timeline_path)
         report_stats["spoken_word_count"] = len(spoken_words)
         report_stats["timeline_entry_count"] = len(timeline_entries)
+        report_stats.update(build_coverage_stats(len(epub_words), timeline_entries))
         report_stats["alignment_match_ratio"] = alignment_stats["match_ratio"]
         report_stats["accepted_chunk_count"] = alignment_stats["accepted_chunk_count"]
         report_stats["chunk_count"] = alignment_stats["chunk_count"]
@@ -76,6 +107,14 @@ def build_command(args: argparse.Namespace) -> int:
         report_stats["repaired_gap_count"] = alignment_stats["repaired_gap_count"]
         report_stats["unrepaired_short_gap_count"] = alignment_stats["unrepaired_short_gap_count"]
         report_stats["repair_examples"] = alignment_stats["repair_examples"]
+        mismatch_warning = build_mismatch_warning(
+            epub_words_count=len(epub_words),
+            spoken_word_count=len(spoken_words),
+            matched_epub_word_count=report_stats["matched_epub_word_count"],
+            epub_coverage_ratio=report_stats["epub_coverage_ratio"],
+        )
+        if mismatch_warning is not None:
+            report_message = f"{report_message} {mismatch_warning}"
     except Exception as exc:
         report_status = "partial"
         report_message = (
@@ -84,6 +123,8 @@ def build_command(args: argparse.Namespace) -> int:
         )
         report_stats["spoken_word_count"] = 0
         report_stats["timeline_entry_count"] = 0
+        report_stats["matched_epub_word_count"] = 0
+        report_stats["epub_coverage_ratio"] = 0.0
         report_stats["alignment_match_ratio"] = 0.0
         report_stats["repaired_word_count"] = 0
         report_stats["repaired_gap_count"] = 0

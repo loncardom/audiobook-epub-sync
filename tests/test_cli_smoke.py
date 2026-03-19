@@ -117,3 +117,6 @@ def test_build_command_writes_epub_words_artifact(tmp_path: Path, monkeypatch) -
     assert epub_words
     assert report["status"] == "success"
     assert report["stats"]["timeline_entry_count"] == 1
+    assert report["stats"]["matched_epub_word_count"] == 1
+    assert report["stats"]["epub_coverage_ratio"] == 1.0
+    assert "Warning:" not in report["message"]
